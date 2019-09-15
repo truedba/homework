@@ -83,14 +83,15 @@ def load_json(fp):
         else:
             open_bracket_pos, close_bracket_pos, nested_element_types = parse_brackets(line)
             result_container = parse_type(nested_element_types[0])()
-            nested_element_types.reverse()
+            nested_element_types
             print(open_bracket_pos,' \n', close_bracket_pos)
 
-            for i in range(0, len(open_bracket_pos) - 1):
-                print(nested_element_types[i+1])
-                container = parse_type(nested_element_types[i+1])()
-                print('line is ',line[open_bracket_pos[i]:close_bracket_pos[i]])
+            for i in range(0, len(open_bracket_pos) ):
+                print(nested_element_types[i])
+                container = parse_type(nested_element_types[i])()
+               # print('line is ',line[open_bracket_pos[i]:close_bracket_pos[i]])
                 for el in CONTAINER_REGEX.finditer(line[open_bracket_pos[i]:close_bracket_pos[i]]):
+                    print(el.group())
                     primitive = PRIMITIVE_REGEX.match(el.group())
                     value = parse_type(
                         primitive.group(1)
@@ -123,6 +124,19 @@ def load(fp):
                 container.append(value)
 
 
+def parse_items(input_list):
+    value_list_container = []
+    print('line is ', input_list)
+    for el in CONTAINER_REGEX.finditer(input_list):
+        print(el.group())
+        primitive = PRIMITIVE_REGEX.match(el.group())
+        value = parse_type(
+            primitive.group(1)
+        )(primitive.group(2))
+        value_list_container.append(value)
+    return value_list_container
+
+
 def parse_brackets(input_list):
     open_bracket_pos = []
     close_bracket_pos = []
@@ -135,9 +149,18 @@ def parse_brackets(input_list):
     for m in p.finditer(input_list):
         if m.group() == '{':
             open_bracket_buff.append(m.end())
+            if len(open_bracket_buff) > 1:
+                container = parse_type(nested_element_types.pop())()
+                value_list = parse_items(input_list[open_bracket_buff[-2]:open_bracket_buff[-1]])
+                for value in value_list:
+                    if type(container) == list:
+                        container.append(value)
+                    elif type(container) == tuple:
+                        container = container + (value,)
+                print(container)
         else:
             close_bracket_pos.append(m.start())
-            open_bracket_pos.append(open_bracket_buff.pop())
+            open_bracket_buff.append(m.start())
 
     return open_bracket_pos, close_bracket_pos, nested_element_types
 
@@ -152,7 +175,7 @@ def test_load(fp):
 
 if __name__ == "__main__":
     a = 'Privet'
-    b = [4.5, 'ssh', 'test', ('1oh', '2ah'), ('cat', 1), 'items', 123, ['frg','msq']]
+    b = [4.5, 'ssh', 'test', ('1oh', '2ah'), ('cat', 1), 'items', 123, [['bmw', 5], 'msq']]
     with open("tmp.txt", "w+") as f:
         dump2(b, f)
 
