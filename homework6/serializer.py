@@ -16,7 +16,7 @@ def dump(obj,fp):
         fp.write("({},{}){}".format(
             type(obj),
             ":".join([f"({type(el)}){el}" for el in obj])
-        )
+        ))
 
 
 def pase_type(str_type):
